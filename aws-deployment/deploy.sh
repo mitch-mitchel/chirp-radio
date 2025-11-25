@@ -74,7 +74,9 @@ aws ecr get-login-password --region $AWS_REGION | \
 # Build image with CMS API URL
 # Using service discovery format: http://<service-name>.<namespace>:<port>
 # We'll use a generic format that works with service discovery
+# Build for linux/amd64 platform (AWS Fargate)
 docker build \
+    --platform linux/amd64 \
     --build-arg VITE_USE_CMS_API=true \
     --build-arg VITE_CMS_API_URL=/api \
     -t $ECR_REPO_NAME:latest \
@@ -82,10 +84,11 @@ docker build \
     ..
 
 # Tag and push
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 docker tag $ECR_REPO_NAME:latest $ECR_URI:latest
-docker tag $ECR_REPO_NAME:latest $ECR_URI:$(date +%Y%m%d-%H%M%S)
+docker tag $ECR_REPO_NAME:latest $ECR_URI:$TIMESTAMP
 docker push $ECR_URI:latest
-docker push $ECR_URI:$(date +%Y%m%d-%H%M%S)
+docker push $ECR_URI:$TIMESTAMP
 
 echo -e "${GREEN}✓ Image pushed to ECR${NC}"
 
@@ -101,10 +104,17 @@ echo -e "\n${YELLOW}Step 4: Verifying nginx configuration...${NC}"
 if [ ! -f ../nginx.ecs.conf ]; then
     echo -e "${RED}Error: nginx.ecs.conf not found!${NC}"
     echo "Please ensure nginx.ecs.conf exists in the project root"
-    echo "and update the CMS service name to: ${CMS_SERVICE_NAME}.local:${CMS_PORT}"
+    echo "The nginx config should proxy /api/ requests to: http://${CMS_SERVICE_NAME}.local:${CMS_PORT}"
     exit 1
 fi
-echo -e "${GREEN}✓ Nginx configuration found${NC}"
+
+# Check if nginx config uses service discovery
+if grep -q "${CMS_SERVICE_NAME}.local" ../nginx.ecs.conf; then
+    echo -e "${GREEN}✓ Nginx configuration uses service discovery${NC}"
+else
+    echo -e "${YELLOW}⚠ Warning: nginx.ecs.conf may not be using service discovery${NC}"
+    echo "  Expected to find: ${CMS_SERVICE_NAME}.local:${CMS_PORT}"
+fi
 
 # Step 5: Register Task Definition
 echo -e "\n${YELLOW}Step 5: Registering ECS task definition...${NC}"
@@ -278,10 +288,21 @@ else
             --load-balancers targetGroupArn=$TG_ARN,containerName=$CONTAINER_NAME,containerPort=$CONTAINER_PORT"
     fi
 
-    # Add service discovery (recommended for ECS-to-ECS communication)
-    # You may need to create a service discovery namespace first
-    # SERVICE_CMD="$SERVICE_CMD \
-    #     --service-registries registryArn=<SERVICE_DISCOVERY_ARN>,containerName=$CONTAINER_NAME"
+    # Add service discovery for ECS-to-ECS communication
+    # The service discovery namespace and service should already be created
+    DISCOVERY_ARN=$(aws servicediscovery list-services \
+        --region $AWS_REGION \
+        --filters "Name=NAMESPACE_ID,Values=$(aws servicediscovery list-namespaces --region $AWS_REGION --query "Namespaces[?Name=='local'].Id" --output text),Condition=EQ" \
+        --query "Services[?Name=='$SERVICE_NAME'].Arn" \
+        --output text 2>/dev/null)
+
+    if [ -n "$DISCOVERY_ARN" ]; then
+        echo "Using service discovery: $DISCOVERY_ARN"
+        SERVICE_CMD="$SERVICE_CMD \
+            --service-registries registryArn=$DISCOVERY_ARN,containerName=$CONTAINER_NAME"
+    else
+        echo "Warning: Service discovery not found. Run ./setup-service-discovery.sh first for ECS-to-ECS communication"
+    fi
 
     eval $SERVICE_CMD
 fi

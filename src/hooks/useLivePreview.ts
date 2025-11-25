@@ -1,7 +1,10 @@
 // src/hooks/useLivePreview.ts
 import { useLivePreview as usePayloadLivePreview } from '@payloadcms/live-preview-react'
 
-const PAYLOAD_SERVER_URL = 'http://localhost:3000'
+// Use environment variable or fallback to production CMS URL
+const PAYLOAD_SERVER_URL =
+  import.meta.env.VITE_CMS_SERVER_URL ||
+  'http://chirp-cms-alb-1737757894.us-east-1.elb.amazonaws.com'
 
 /**
  * Wrapper hook for PayloadCMS live preview

@@ -16,26 +16,26 @@ interface WebhookEvent {
 
 // Map CMS collection names to cache keys
 const COLLECTION_TO_CACHE_KEY: Record<string, string> = {
-  'announcements': 'announcements',
-  'articles': 'articles',
-  'events': 'events',
-  'podcasts': 'podcasts',
-  'listeners': 'members',
-  'volunteerCalendar': 'volunteer-calendar',
-  'shopItems': 'shop-items',
-  'pages': 'pages',
+  announcements: 'announcements',
+  articles: 'articles',
+  events: 'events',
+  podcasts: 'podcasts',
+  listeners: 'members',
+  volunteerCalendar: 'volunteer-calendar',
+  shopItems: 'shop-items',
+  pages: 'pages',
   'site-settings': 'site-settings',
-  'siteSettings': 'site-settings',
-  'weeklyCharts': 'weekly-charts',
+  siteSettings: 'site-settings',
+  weeklyCharts: 'weekly-charts',
   'mobile-page-content': 'mobile-page-content',
-  'mobilePageContent': 'mobile-page-content',
+  mobilePageContent: 'mobile-page-content',
   'mobile-app-settings': 'mobile-app-settings',
-  'mobileAppSettings': 'mobile-app-settings',
+  mobileAppSettings: 'mobile-app-settings',
   'volunteer-form-settings': 'volunteer-form-settings',
-  'volunteerFormSettings': 'volunteer-form-settings',
+  volunteerFormSettings: 'volunteer-form-settings',
   'player-fallback-images': 'player-fallback-images',
-  'playerFallbackImages': 'player-fallback-images',
-  'showSchedules': 'show-schedules',
+  playerFallbackImages: 'player-fallback-images',
+  showSchedules: 'show-schedules',
   'show-schedules': 'show-schedules',
 }
 
@@ -44,12 +44,11 @@ export function useWebhookListener() {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    // Only enable in development when CMS API is enabled
+    // Enable when CMS API is enabled (both dev and production)
     const USE_CMS_API = import.meta.env.VITE_USE_CMS_API === 'true'
-    const isDevelopment = import.meta.env.DEV
 
-    if (!USE_CMS_API || !isDevelopment) {
-      console.log('[Webhook Listener] Disabled (not in dev or CMS API not enabled)')
+    if (!USE_CMS_API) {
+      console.log('[Webhook Listener] Disabled (CMS API not enabled)')
       return
     }
 
@@ -81,7 +80,10 @@ export function useWebhookListener() {
               console.log('[Webhook Listener] Clearing cache for:', cacheKey)
               clearCache(cacheKey)
             } else {
-              console.warn('[Webhook Listener] No cache key mapping for collection:', data.collection)
+              console.warn(
+                '[Webhook Listener] No cache key mapping for collection:',
+                data.collection
+              )
             }
 
             // Emit event to trigger CMS context refresh

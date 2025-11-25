@@ -4,7 +4,7 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "arn:aws:iam::622631872953:role/chirp-cms-ecs-execution-role",
+  "executionRoleArn": "arn:aws:iam::622631872953:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
       "name": "chirp-radio-frontend",

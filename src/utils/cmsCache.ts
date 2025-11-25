@@ -10,7 +10,11 @@
 
 const CACHE_PREFIX = 'chirp_cms_cache_'
 const CACHE_VERSION = 'v1'
-const DEFAULT_TTL = 1000 * 60 * 60 * 24 // 24 hours
+// Use shorter TTL in production (5 minutes) since webhooks require backend infrastructure
+// In development, use longer TTL (24 hours) since webhooks work via Vite middleware
+const DEFAULT_TTL = import.meta.env.PROD
+  ? 1000 * 60 * 5 // 5 minutes in production
+  : 1000 * 60 * 60 * 24 // 24 hours in development
 
 export interface CacheEntry<T> {
   data: T
@@ -125,9 +129,9 @@ export function clearCache(key: string): void {
 export function clearAllCache(): void {
   try {
     const keys = Object.keys(localStorage)
-    const cacheKeys = keys.filter(key => key.startsWith(CACHE_PREFIX))
+    const cacheKeys = keys.filter((key) => key.startsWith(CACHE_PREFIX))
 
-    cacheKeys.forEach(key => localStorage.removeItem(key))
+    cacheKeys.forEach((key) => localStorage.removeItem(key))
     console.log(`[CMSCache] Cleared ${cacheKeys.length} cache entries`)
   } catch (err) {
     console.error('[CMSCache] Error clearing all cache:', err)
@@ -140,20 +144,22 @@ export function clearAllCache(): void {
 function clearOldestCache(): void {
   try {
     const keys = Object.keys(localStorage)
-    const cacheKeys = keys.filter(key => key.startsWith(CACHE_PREFIX + CACHE_VERSION))
+    const cacheKeys = keys.filter((key) => key.startsWith(CACHE_PREFIX + CACHE_VERSION))
 
     // Get timestamps for all cache entries
-    const entries = cacheKeys.map(key => {
-      try {
-        const cached = localStorage.getItem(key)
-        if (!cached) return null
+    const entries = cacheKeys
+      .map((key) => {
+        try {
+          const cached = localStorage.getItem(key)
+          if (!cached) return null
 
-        const entry: CacheEntry<unknown> = JSON.parse(cached)
-        return { key, timestamp: entry.timestamp }
-      } catch {
-        return null
-      }
-    }).filter((entry): entry is { key: string; timestamp: number } => entry !== null)
+          const entry: CacheEntry<unknown> = JSON.parse(cached)
+          return { key, timestamp: entry.timestamp }
+        } catch {
+          return null
+        }
+      })
+      .filter((entry): entry is { key: string; timestamp: number } => entry !== null)
 
     // Sort by timestamp (oldest first)
     entries.sort((a, b) => a.timestamp - b.timestamp)
@@ -180,13 +186,13 @@ export function getCacheStats(): {
 } {
   try {
     const keys = Object.keys(localStorage)
-    const cacheKeys = keys.filter(key => key.startsWith(CACHE_PREFIX + CACHE_VERSION))
+    const cacheKeys = keys.filter((key) => key.startsWith(CACHE_PREFIX + CACHE_VERSION))
 
     let totalSize = 0
     let oldestTimestamp: number | null = null
     let newestTimestamp: number | null = null
 
-    cacheKeys.forEach(key => {
+    cacheKeys.forEach((key) => {
       const cached = localStorage.getItem(key)
       if (cached) {
         totalSize += cached.length
