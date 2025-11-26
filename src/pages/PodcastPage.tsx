@@ -147,7 +147,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[0].host}`}
               eventDate={formatPodcastDate(podcasts[0])}
               tags={getTags(podcasts[0])}
-              contentSummary={podcasts[0].description as string | undefined}
+              contentSummary={podcasts[0].excerpt}
               showTicketButton={false}
               onClick={() => handlePodcastClick(podcasts[0])}
             />
@@ -192,7 +192,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[1].host}`}
               eventDate={formatPodcastDate(podcasts[1])}
               tags={getTags(podcasts[1])}
-              contentSummary={podcasts[1].description as string | undefined}
+              contentSummary={podcasts[1].excerpt}
               showTicketButton={false}
               showShareButton={false}
               onClick={() => handlePodcastClick(podcasts[1])}
@@ -211,7 +211,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[2].host}`}
               eventDate={formatPodcastDate(podcasts[2])}
               tags={getTags(podcasts[2])}
-              contentSummary={podcasts[2].description as string | undefined}
+              contentSummary={podcasts[2].excerpt}
               showTicketButton={false}
               showShareButton={false}
               onClick={() => handlePodcastClick(podcasts[2])}
@@ -232,7 +232,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[3].host}`}
               eventDate={formatPodcastDate(podcasts[3])}
               tags={getTags(podcasts[3])}
-              contentSummary={podcasts[3].description as string | undefined}
+              contentSummary={podcasts[3].excerpt}
               showTicketButton={false}
               showShareButton={false}
               onClick={() => handlePodcastClick(podcasts[3])}
@@ -251,7 +251,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[4].host}`}
               eventDate={formatPodcastDate(podcasts[4])}
               tags={getTags(podcasts[4])}
-              contentSummary={podcasts[4].description as string | undefined}
+              contentSummary={podcasts[4].excerpt}
               showTicketButton={false}
               showShareButton={false}
               onClick={() => handlePodcastClick(podcasts[4])}
@@ -298,7 +298,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[5].host}`}
               eventDate={formatPodcastDate(podcasts[5])}
               tags={getTags(podcasts[5])}
-              contentSummary={podcasts[5].description as string | undefined}
+              contentSummary={podcasts[5].excerpt}
               showTicketButton={false}
               onClick={() => handlePodcastClick(podcasts[5])}
             />
@@ -316,7 +316,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[6].host}`}
               eventDate={formatPodcastDate(podcasts[6])}
               tags={getTags(podcasts[6])}
-              contentSummary={podcasts[6].description as string | undefined}
+              contentSummary={podcasts[6].excerpt}
               showTicketButton={false}
               onClick={() => handlePodcastClick(podcasts[6])}
             />
@@ -336,7 +336,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[7].host}`}
               eventDate={formatPodcastDate(podcasts[7])}
               tags={getTags(podcasts[7])}
-              contentSummary={podcasts[7].description as string | undefined}
+              contentSummary={podcasts[7].excerpt}
               showTicketButton={false}
               onClick={() => handlePodcastClick(podcasts[7])}
             />
@@ -354,7 +354,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[8]?.host}`}
               eventDate={formatPodcastDate(podcasts[8])}
               tags={getTags(podcasts[8])}
-              contentSummary={podcasts[8]?.description as string | undefined}
+              contentSummary={podcasts[8]?.excerpt}
               showTicketButton={false}
               onClick={() => handlePodcastClick(podcasts[8])}
             />
@@ -374,7 +374,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[9].host}`}
               eventDate={formatPodcastDate(podcasts[9])}
               tags={getTags(podcasts[9])}
-              contentSummary={podcasts[9].description as string | undefined}
+              contentSummary={podcasts[9].excerpt}
               showTicketButton={false}
               onClick={() => handlePodcastClick(podcasts[9])}
             />
@@ -392,7 +392,7 @@ const PodcastPage: React.FC = () => {
               authorBy={`by ${podcasts[10].host}`}
               eventDate={formatPodcastDate(podcasts[10])}
               tags={getTags(podcasts[10])}
-              contentSummary={podcasts[10].description as string | undefined}
+              contentSummary={podcasts[10].excerpt}
               showTicketButton={false}
               onClick={() => handlePodcastClick(podcasts[10])}
             />
