@@ -10,6 +10,7 @@
 ### Frontend
 
 - iPad responsive styling and layout optimization (app now supports iPhone + iPad)
+- **CrCurrentDjCard Fallback Image** - Update hardcoded `localhost:3000` URL to use `VITE_CMS_API_URL` environment variable for production (src/stories/CrCurrentDjCard.tsx:30)
 - **Neon Donations Integration** - Create new form in Neon that embeds into site or parallels CrDonation component for seamless UX
 - **PayPal Store Integration** - Set up PayPal for store (currently nothing configured in PayPal for CHIRP)
 - **Song Request API Integration** - MakeRequest.tsx UI complete, needs API endpoint connection (handleSubmit currently just logs to console)
@@ -23,7 +24,6 @@
 ### CMS (chirp-cms repo)
 
 - **Recent Shows Automation** - Get the recent two shows automatically - emailed about getting dj named folders to pull from
-- **Navigation Management** - Add method to manage navigation via CMS - future feature. Will need navigation refactor
 - **Alt Text Generator** - Get alt tag generator working - CHIRP is ok with paying for this. Needs to create real, valid, contextual alt-tags
 
 ### Backend

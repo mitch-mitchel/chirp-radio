@@ -27,7 +27,7 @@ interface CrCurrentDjCardProps {
 
 export default function CrCurrentDjCard({
   // Image
-  djImage = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
+  djImage = 'http://localhost:3000/api/player-fallback-images/file/album-art-8-600x600.png',
   djImageAlt = 'DJ Current',
 
   // CrCurrentDj props
