@@ -16,6 +16,8 @@ PODS:
   - CapacitorStatusBar (7.0.3):
     - Capacitor
   - IONFilesystemLib (1.0.1)
+  - SquareetlabsCapacitorNavigationBar (1.1.2):
+    - Capacitor
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -26,6 +28,7 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "SquareetlabsCapacitorNavigationBar (from `../../node_modules/@squareetlabs/capacitor-navigation-bar`)"
 
 SPEC REPOS:
   trunk:
@@ -48,6 +51,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
+  SquareetlabsCapacitorNavigationBar:
+    :path: "../../node_modules/@squareetlabs/capacitor-navigation-bar"
 
 SPEC CHECKSUMS:
   Capacitor: 358dd1c3fdd71d969547b17e159fd8a7736cb45f
@@ -59,7 +64,8 @@ SPEC CHECKSUMS:
   CapacitorSplashScreen: e388b8e0ed0e982a9d3a40417f478e7a018a8763
   CapacitorStatusBar: 0659ddc7b1713764a05831463d215b177a15d054
   IONFilesystemLib: 89258b8e3e85465da93127d25d7ce37f977e8a6f
+  SquareetlabsCapacitorNavigationBar: b742bd856c6dd8d6e95ed61bead034761a28630a
 
-PODFILE CHECKSUM: f3fe8fa68d1dd048cda6f7b7e7c52af252b0c064
+PODFILE CHECKSUM: 89a3aba345211caaa9090f3d1f37f9bb2f78941e
 
 COCOAPODS: 1.16.2

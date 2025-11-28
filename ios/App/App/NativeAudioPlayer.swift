@@ -823,16 +823,29 @@ public class NativeAudioPlayer: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func pollNowPlayingAPI() {
-        guard let urlString = pollingApiUrl,
-              let url = URL(string: urlString) else {
-            print("❌ [POLL] Invalid API URL for polling")
+        guard let urlString = pollingApiUrl else {
+            print("❌ [POLL] No API URL configured for polling")
+            return
+        }
+
+        // Convert relative URLs to absolute URLs
+        var fullUrlString = urlString
+        if urlString.hasPrefix("/") {
+            // Relative URL - prepend base URL (matches Vite proxy target in vite.config.ts)
+            fullUrlString = "https://chirpradio.appspot.com\(urlString)"
+            print("🔗 [POLL] Converted relative URL to absolute: \(fullUrlString)")
+        }
+
+        guard let url = URL(string: fullUrlString) else {
+            print("❌ [POLL] Invalid API URL for polling: \(fullUrlString)")
             return
         }
 
         let pollStartTime = Date()
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         print("🔄 [POLL START] Polling now playing API at \(pollStartTime.timeIntervalSince1970)")
-        print("   URL: \(urlString)")
+        print("   Original URL: \(urlString)")
+        print("   Full URL: \(fullUrlString)")
         print("   App state: \(UIApplication.shared.applicationState.rawValue) (0=active, 1=inactive, 2=background)")
         print("   Is playing: \(isPlaying)")
 
