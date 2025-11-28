@@ -3,7 +3,7 @@
 import type { TrackPlayed, TracksPlayedResponse } from '../types/tracksPlayed'
 import { setCached, getCached } from './cmsCache'
 
-const CMS_BASE_URL = import.meta.env.VITE_CMS_API_URL || 'http://localhost:3000'
+const CMS_BASE_URL = import.meta.env.VITE_CMS_API_URL || 'http://localhost:3000/api'
 const TRACKS_CACHE_KEY = 'tracks-played-cache'
 const TRACKS_TIMESTAMP_KEY = 'tracks-played-timestamp'
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
@@ -52,7 +52,7 @@ export async function getTracksPlayed(options?: GetTracksPlayedOptions): Promise
       )
     }
 
-    const url = `${CMS_BASE_URL}/api/tracks-played?${params.toString()}`
+    const url = `${CMS_BASE_URL}/tracks-played?${params.toString()}`
     console.log('[tracksPlayedDB] Fetching from:', url)
 
     const response = await fetch(url)
