@@ -7,7 +7,8 @@ import CrPlaylistTable from '../stories/CrPlaylistTable'
 import CrAnnouncement from '../stories/CrAnnouncement'
 import CrCard from '../stories/CrCard'
 import CrPagination from '../stories/CrPagination'
-import { useTracks, useArticles } from '../hooks/useData'
+import { useArticles } from '../hooks/useData'
+import { useTracksPlayed } from '../hooks/useTracksPlayed'
 import announcementsData from '../data/announcements.json'
 import type { Article, Announcement } from '../types/cms'
 import { getArticleImageUrl, getArticleCategoryName, getArticleTags } from '../utils/typeHelpers'
@@ -17,7 +18,7 @@ const HOURS_PER_PAGE = 4
 const PlaylistPage: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { data: tracks } = useTracks()
+  const { data: tracks } = useTracksPlayed({ limit: 200, page: 1 })
   const { data: articles } = useArticles()
 
   // Get current page from URL, default to 0
@@ -38,49 +39,54 @@ const PlaylistPage: React.FC = () => {
   }, [])
 
   // Format tracks with hour data for grouping
-  const formattedTracks = useMemo(
-    () =>
-      tracks?.map((track) => {
-        // Parse the hourKey to determine start/end times
-        const hourMatch = track.hourKey?.match(/(\d+)(am|pm)/i)
-        let startTime = '12:00am'
-        let endTime = '1:00am'
+  const formattedTracks = useMemo(() => {
+    if (!tracks || tracks.length === 0) return []
 
-        if (hourMatch) {
-          const hour = parseInt(hourMatch[1])
-          const period = hourMatch[2].toLowerCase()
-          startTime = `${hour}:00${period}`
+    return tracks.map((track) => {
+      // Generate hourKey from playedAt timestamp
+      const playedDate = new Date(track.playedAt)
+      const hour = playedDate.getHours()
+      const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+      const period = hour < 12 ? 'am' : 'pm'
+      const hourKey = `${hour12}${period}`
 
-          // Calculate end time (next hour)
-          if (hour === 12) {
-            endTime = period === 'am' ? '1:00am' : '1:00pm'
-          } else if (hour === 11) {
-            endTime = period === 'am' ? '12:00pm' : '12:00am'
-          } else {
-            endTime = `${hour + 1}:00${period}`
-          }
+      // Parse the hourKey to determine start/end times
+      const hourMatch = hourKey.match(/(\d+)(am|pm)/i)
+      let startTime = '12:00am'
+      let endTime = '1:00am'
+
+      if (hourMatch) {
+        const hourNum = parseInt(hourMatch[1])
+        const periodStr = hourMatch[2].toLowerCase()
+        startTime = `${hourNum}:00${periodStr}`
+
+        // Calculate end time (next hour)
+        if (hourNum === 12) {
+          endTime = periodStr === 'am' ? '1:00am' : '1:00pm'
+        } else if (hourNum === 11) {
+          endTime = periodStr === 'am' ? '12:00pm' : '12:00am'
+        } else {
+          endTime = `${hourNum + 1}:00${periodStr}`
         }
+      }
 
-        return {
-          ...track,
-          timeAgo: new Date(track.playedAt).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-          }),
-          hourData: {
-            startTime,
-            endTime,
-            djName: track.djName || 'Unknown DJ',
-            djProfileUrl:
-              'djImage' in track
-                ? ((track as Record<string, unknown>).djImage as string | undefined)
-                : undefined,
-            showName: track.showName || 'Unknown Show',
-          },
-        }
-      }) || [],
-    [tracks]
-  )
+      return {
+        ...track,
+        hourKey,
+        timeAgo: new Date(track.playedAt).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+        hourData: {
+          startTime,
+          endTime,
+          djName: track.djName || 'Unknown DJ',
+          djProfileUrl: undefined,
+          showName: track.showName || 'Unknown Show',
+        },
+      }
+    })
+  }, [tracks])
 
   // Group tracks by hour and paginate - split into first 2 hours and last 2 hours
   const { firstTwoHours, lastTwoHours, totalPages } = useMemo(() => {

@@ -7,19 +7,15 @@ import CrPlaylistTable from '../stories/CrPlaylistTable'
 import CrAnnouncement from '../stories/CrAnnouncement'
 import CrList from '../stories/CrList'
 import CrAdSpace from '../stories/CrAdSpace'
-import {
-  useTracks,
-  useCurrentUser,
-  useAnnouncements,
-  useSiteSettings,
-} from '../hooks/useData'
+import { useCurrentUser, useAnnouncements, useSiteSettings } from '../hooks/useData'
+import { useTracksPlayed } from '../hooks/useTracksPlayed'
 import { useNotification } from '../contexts/NotificationContext'
 import { getCollection, removeFromCollection, type CollectionTrack } from '../utils/collectionDB'
 import './ListenPage.css'
 
 const ListenPage: React.FC = () => {
   const navigate = useNavigate()
-  const { data: tracks } = useTracks()
+  const { data: tracks } = useTracksPlayed({ limit: 200, page: 1 })
   const { data: currentUser } = useCurrentUser()
   const { data: announcements } = useAnnouncements()
   const { data: siteSettings } = useSiteSettings()
@@ -28,10 +24,20 @@ const ListenPage: React.FC = () => {
 
   // Transform tracks for playlist table - only show last 2 hours
   const recentlyPlayedTracks = React.useMemo(() => {
-    if (!tracks) return []
+    if (!tracks || tracks.length === 0) return []
+
+    // Add hourKey to each track based on playedAt timestamp
+    const tracksWithHourKey = tracks.map((track) => {
+      const playedDate = new Date(track.playedAt)
+      const hour = playedDate.getHours()
+      const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+      const period = hour < 12 ? 'am' : 'pm'
+      const hourKey = `${hour12}${period}`
+      return { ...track, hourKey }
+    })
 
     // First, find the most recent 2 unique hours by sorting tracks by time
-    const tracksSortedByTime = [...tracks].sort(
+    const tracksSortedByTime = [...tracksWithHourKey].sort(
       (a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime()
     )
 
@@ -47,7 +53,7 @@ const ListenPage: React.FC = () => {
     const recentHours = uniqueHours.slice(0, 2)
 
     // Filter tracks from those 2 hours, then sort NEWEST to OLDEST (reverse chronological)
-    const filteredTracks = tracks
+    const filteredTracks = tracksWithHourKey
       .filter((track) => recentHours.includes(track.hourKey))
       .sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
 
@@ -155,9 +161,11 @@ const ListenPage: React.FC = () => {
   const fullWidthAnnouncementId =
     typeof siteSettings?.fullWidthAnnouncement === 'string'
       ? siteSettings.fullWidthAnnouncement
-      : typeof siteSettings?.fullWidthAnnouncement === 'object' && siteSettings.fullWidthAnnouncement && 'id' in siteSettings.fullWidthAnnouncement
-      ? siteSettings.fullWidthAnnouncement.id
-      : undefined
+      : typeof siteSettings?.fullWidthAnnouncement === 'object' &&
+          siteSettings.fullWidthAnnouncement &&
+          'id' in siteSettings.fullWidthAnnouncement
+        ? siteSettings.fullWidthAnnouncement.id
+        : undefined
 
   const fullWidthAnnouncement = fullWidthAnnouncementId
     ? announcements?.find((a) => a.id === fullWidthAnnouncementId)
@@ -177,11 +185,14 @@ const ListenPage: React.FC = () => {
 
   // Get page text content from CMS with fallbacks
   const pageTitle = (siteSettings?.listenPageTitle as string) || 'Listen'
-  const currentPlaylistTitle = (siteSettings?.listenCurrentPlaylistTitle as string) || 'Current Playlist'
-  const previousPlaysButtonText = (siteSettings?.listenPreviousPlaysButtonText as string) || 'Previous Plays'
-  const userCollectionTitle = (siteSettings?.listenUserCollectionTitle as string) || 'A Few from Your Collection'
-  const yourCollectionButtonText = (siteSettings?.listenYourCollectionButtonText as string) || 'Your Collection'
-
+  const currentPlaylistTitle =
+    (siteSettings?.listenCurrentPlaylistTitle as string) || 'Current Playlist'
+  const previousPlaysButtonText =
+    (siteSettings?.listenPreviousPlaysButtonText as string) || 'Previous Plays'
+  const userCollectionTitle =
+    (siteSettings?.listenUserCollectionTitle as string) || 'A Few from Your Collection'
+  const yourCollectionButtonText =
+    (siteSettings?.listenYourCollectionButtonText as string) || 'Your Collection'
 
   return (
     <div className="listen-page">
@@ -267,7 +278,11 @@ const ListenPage: React.FC = () => {
               variant={fullWidthAnnouncement.variant}
               textureBackground={fullWidthAnnouncement.textureBackground}
               headlineText={fullWidthAnnouncement.headlineText}
-              bodyText={typeof fullWidthAnnouncement.bodyText === 'string' ? fullWidthAnnouncement.bodyText : undefined}
+              bodyText={
+                typeof fullWidthAnnouncement.bodyText === 'string'
+                  ? fullWidthAnnouncement.bodyText
+                  : undefined
+              }
               showLink={fullWidthAnnouncement.showLink}
               linkText={fullWidthAnnouncement.linkText}
               linkUrl={fullWidthAnnouncement.linkUrl}
