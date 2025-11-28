@@ -1,5 +1,6 @@
 // CrPlaylistHourBreak.tsx
 import { PiCaretDown } from 'react-icons/pi'
+import CrChip from './CrChip'
 import './CrPlaylistHourBreak.css'
 
 interface CrPlaylistHourBreakProps {
@@ -8,6 +9,7 @@ interface CrPlaylistHourBreakProps {
   djName?: string
   djProfileUrl?: string
   showName?: string
+  isOnAir?: boolean
   isCollapsed?: boolean
   showChevron?: boolean
   className?: string
@@ -18,7 +20,8 @@ export default function CrPlaylistHourBreak({
   endTime = '2:00pm',
   djName = 'DJ Current',
   djProfileUrl = '#',
-  showName = '',
+  _showName = '',
+  isOnAir = false,
   isCollapsed = false,
   showChevron = true,
   className = '',
@@ -43,10 +46,10 @@ export default function CrPlaylistHourBreak({
       >
         {djName}
       </a>
-      {showName && (
-        <>
-          <span className="cr-playlist-hour-break__show-name">{showName}</span>
-        </>
+      {isOnAir && (
+        <CrChip variant="primary" aria-hidden={true}>
+          On-Air
+        </CrChip>
       )}
       <div className="cr-playlist-hour-break__line"></div>
     </div>

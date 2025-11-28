@@ -128,6 +128,8 @@ export function NowPlayingProvider({
   const lastAlbumArtUrlRef = useRef(cachedData?.albumArt || '')
   // Mark as resolved if cached data has album art to prevent unnecessary retries
   const albumArtResolvedRef = useRef(!!cachedData?.albumArt)
+  // Track polls since track change to delay fallback chain
+  const pollsSinceTrackChangeRef = useRef(0)
 
   // Fetch now playing data
   const fetchNowPlaying = async () => {
@@ -141,31 +143,71 @@ export function NowPlayingProvider({
         log.log('Using mock current playlist data (dev mode)')
         responseData = mockCurrentPlaylist.now_playing
       } else {
-        // Use native HTTP for iOS/Android, fetch for web
-        const isNative = Capacitor.getPlatform() !== 'web'
+        // Try tracks-played DB first (new source with resolved album art)
+        // Then fallback to CHIRP API (old source for backwards compatibility)
+        const CMS_API_URL = import.meta.env.VITE_CMS_API_URL || ''
+        let usedDbSource = false
 
-        if (isNative) {
-          // Native: Use CapacitorHttp (bypasses CORS)
-          const response = await CapacitorHttp.get({
-            url: apiUrl,
-            headers: { 'Content-Type': 'application/json' },
-          })
+        try {
+          log.log('[NowPlaying] Attempting tracks-played DB first...')
+          const dbUrl = `${CMS_API_URL}/tracks-played?limit=1&sort=-playedAt`
+          const dbResponse = await fetch(dbUrl)
 
-          if (response.status !== 200 || !response.data) {
-            throw new Error(`HTTP error! Status: ${response.status}`)
+          if (dbResponse.ok) {
+            const dbData = await dbResponse.json()
+            if (dbData.docs && dbData.docs.length > 0) {
+              const track = dbData.docs[0]
+              // Convert DB format to expected format
+              responseData = {
+                artist: track.artistName,
+                track: track.trackName,
+                release: track.albumName,
+                album: track.albumName,
+                label: track.labelName,
+                dj: track.djName,
+                show: track.showName,
+                artist_is_local: track.isLocal,
+                albumArt: track.albumArt, // Already resolved!
+                played_at_gmt: track.playedAt,
+                played_at_local: track.playedAt,
+              }
+              usedDbSource = true
+              log.log('[NowPlaying] ✓ Using tracks-played DB')
+            }
           }
-          responseData = response.data.now_playing
-        } else {
-          // Web: Use fetch (works with Vite proxy)
-          const response = await fetch(apiUrl, {
-            headers: { 'Content-Type': 'application/json' },
-          })
+        } catch (dbError) {
+          log.log('[NowPlaying] DB fetch failed, falling back to CHIRP API:', dbError)
+        }
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`)
+        // Fallback to CHIRP API if DB fetch failed
+        if (!usedDbSource) {
+          log.log('[NowPlaying] Falling back to CHIRP API...')
+          const isNative = Capacitor.getPlatform() !== 'web'
+
+          if (isNative) {
+            // Native: Use CapacitorHttp (bypasses CORS)
+            const response = await CapacitorHttp.get({
+              url: apiUrl,
+              headers: { 'Content-Type': 'application/json' },
+            })
+
+            if (response.status !== 200 || !response.data) {
+              throw new Error(`HTTP error! Status: ${response.status}`)
+            }
+            responseData = response.data.now_playing
+          } else {
+            // Web: Use fetch (works with Vite proxy)
+            const response = await fetch(apiUrl, {
+              headers: { 'Content-Type': 'application/json' },
+            })
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`)
+            }
+            const data = await response.json()
+            responseData = data.now_playing
           }
-          const data = await response.json()
-          responseData = data.now_playing
+          log.log('[NowPlaying] ✓ Using CHIRP API')
         }
       }
 
@@ -183,6 +225,7 @@ export function NowPlayingProvider({
           consecutiveNoChangeRef.current = 0
           lastSongRef.current = newSong
           lastUpdateTimeRef.current = new Date()
+          pollsSinceTrackChangeRef.current = 0 // Reset poll counter for new track
 
           // Emit song change event to trigger Recently Played refresh
           emit('songChanged', { artist: newData.artist, track: newData.track })
@@ -225,24 +268,34 @@ export function NowPlayingProvider({
               albumArtUrl = upgradeImageQuality(lastFmUrl, imageQuality)
               log.log('✅ Album art from Last.fm URL:', albumArtUrl)
             } else {
-              log.log('❌ No Last.fm URLs found, trying fallback chain')
-              // No Last.fm URL - try fallback chain (iTunes → MusicBrainz → CMS)
-              const isMobile = Capacitor.isNativePlatform()
+              // No Last.fm URL yet - wait before trying fallback chain
+              // Last.fm URLs often take 10-30 seconds to populate
+              if (pollsSinceTrackChangeRef.current >= 6) {
+                // After 30 seconds (6 polls × 5s), try fallback chain
+                log.log('❌ No Last.fm URLs after 30s, trying fallback chain')
+                const isMobile = Capacitor.isNativePlatform()
 
-              try {
-                const resolved = await resolveAlbumArt(
-                  undefined, // No Last.fm URL
-                  newData.artist || '',
-                  newData.album || newData.release || '',
-                  fallbackImages,
-                  -1,
-                  isMobile
+                try {
+                  const resolved = await resolveAlbumArt(
+                    undefined, // No Last.fm URL
+                    newData.artist || '',
+                    newData.album || newData.release || '',
+                    fallbackImages,
+                    -1,
+                    isMobile
+                  )
+                  albumArtUrl = resolved.url
+                  log.log(`Album art resolved from: ${resolved.source}`)
+                } catch (_error) {
+                  log.log('Failed to resolve album art from fallbacks, using empty string')
+                  albumArtUrl = ''
+                }
+              } else {
+                // Wait for Last.fm - don't show fallback yet
+                log.log(
+                  `⏳ No Last.fm URLs yet (poll ${pollsSinceTrackChangeRef.current}/6) - waiting before fallback`
                 )
-                albumArtUrl = resolved.url
-                log.log(`Album art resolved from: ${resolved.source}`)
-              } catch (_error) {
-                log.log('Failed to resolve album art from fallbacks, using empty string')
-                albumArtUrl = ''
+                albumArtUrl = '' // Empty until Last.fm available or timeout
               }
             }
           }
@@ -300,6 +353,7 @@ export function NowPlayingProvider({
           setIsLoading(false)
         } else {
           consecutiveNoChangeRef.current++
+          pollsSinceTrackChangeRef.current++ // Increment poll counter
 
           // Group repetitive "no change" logs to reduce console noise
           console.groupCollapsed(
@@ -307,8 +361,74 @@ export function NowPlayingProvider({
           )
           log.log('Current track:', currentData.track, 'by', currentData.artist)
 
-          // REMOVED: Album art retry mechanism that was causing art to flip back and forth
-          // Album art is now resolved once when track changes and not retried
+          // Check if Last.fm album art became available (only if currently empty or using fallback)
+          if (!currentData.albumArt || currentData.albumArt === '') {
+            const lastFmUrl =
+              newData.lastfm_urls?.large_image ||
+              newData.lastfm_urls?.med_image ||
+              newData.lastfm_urls?.sm_image
+
+            if (lastFmUrl) {
+              log.log('🎨 Last.fm album art became available!')
+              const updatedAlbumArt = upgradeImageQuality(lastFmUrl, imageQuality)
+
+              // Update track data
+              const updatedTrackData = {
+                ...currentData,
+                albumArt: updatedAlbumArt,
+              }
+              setCurrentData(updatedTrackData)
+
+              // Update cache
+              const cacheData = {
+                ...updatedTrackData,
+                timestamp: Date.now(),
+              }
+              sessionStorage.setItem('chirp-now-playing', JSON.stringify(cacheData))
+
+              // Update native metadata
+              updateNativeMetadata(updatedTrackData)
+            } else if (pollsSinceTrackChangeRef.current === 6) {
+              // At 30 seconds, try fallback chain once if still no Last.fm
+              log.log('⏰ 30 seconds elapsed - trying fallback chain')
+              const isMobile = Capacitor.isNativePlatform()
+              const fallbackUrls =
+                cmsData.playerFallbackImages
+                  ?.map((img) => img.url)
+                  .filter((url): url is string => !!url) || []
+
+              try {
+                const resolved = await resolveAlbumArt(
+                  undefined,
+                  newData.artist || '',
+                  newData.album || newData.release || '',
+                  fallbackUrls,
+                  -1,
+                  isMobile
+                )
+
+                const updatedTrackData = {
+                  ...currentData,
+                  albumArt: resolved.url,
+                }
+                setCurrentData(updatedTrackData)
+
+                // Update cache
+                const cacheData = {
+                  ...updatedTrackData,
+                  timestamp: Date.now(),
+                }
+                sessionStorage.setItem('chirp-now-playing', JSON.stringify(cacheData))
+
+                // Update native metadata
+                updateNativeMetadata(updatedTrackData)
+
+                log.log(`Album art resolved from: ${resolved.source}`)
+              } catch (_error) {
+                log.log('Fallback chain failed - keeping empty')
+              }
+            }
+          }
 
           console.groupEnd()
         }
