@@ -38,18 +38,13 @@ class CarPlayBridge: UIResponder, CPTemplateApplicationSceneDelegate {
 
         configureLiveStreamNowPlaying()
 
-        // Create tab bar template - REMOVE the extra tab, just use nowPlayingTemplate
-        print("🚗 Creating tab bar template with Now Playing...")
-        tabBarTemplate = CPTabBarTemplate(templates: [nowPlayingTemplate!])
-        print("🚗 ✅ Tab bar template created")
-
-        // Set tab bar as root template
-        print("🚗 Setting root template...")
-        interfaceController.setRootTemplate(tabBarTemplate!, animated: false) { success, error in
+        // Set Now Playing template directly as root (no tab bar for live radio stream)
+        print("🚗 Setting Now Playing as root template (no tab bar)...")
+        interfaceController.setRootTemplate(nowPlayingTemplate!, animated: false) { success, error in
             if let error = error {
                 print("🚗 ❌ Error setting root template: \(error)")
             } else {
-                print("🚗 ✅ Root template set successfully, success: \(success)")
+                print("🚗 ✅ Now Playing root template set successfully, success: \(success)")
             }
         }
 
