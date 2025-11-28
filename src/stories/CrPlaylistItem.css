@@ -96,6 +96,7 @@
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--cr-space-2);
   /* ENSURE text starts at exact left edge */
   padding: 0;

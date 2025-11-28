@@ -66,6 +66,13 @@ export function useTracksPlayed(options?: UseTracksPlayedOptions): UseTracksPlay
   useEffect(() => {
     if (autoFetch) {
       fetchTracks()
+
+      // Auto-refresh every 15 seconds
+      const interval = setInterval(() => {
+        fetchTracks()
+      }, 15000)
+
+      return () => clearInterval(interval)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [limit, page, autoFetch])
@@ -102,6 +109,13 @@ export function useRecentTracksPlayed(count: number = 6): UseTracksPlayedReturn 
 
   useEffect(() => {
     fetchTracks()
+
+    // Auto-refresh every 15 seconds
+    const interval = setInterval(() => {
+      fetchTracks()
+    }, 15000)
+
+    return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count])
 
