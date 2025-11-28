@@ -27,6 +27,7 @@ public class NativeAudioPlayer: CAPPlugin, CAPBridgedPlugin {
     private var backgroundPollingTimer: Timer?
     private var pollingApiUrl: String?
     private var lastTrackId: String = ""
+    private var pollsSinceTrackChange: Int = 0
     private var backgroundSession: URLSession?
     private var timeObserverToken: Any?
     private var lastPollTime: Date = Date.distantPast
@@ -894,8 +895,9 @@ public class NativeAudioPlayer: CAPPlugin, CAPBridgedPlugin {
                         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
                         self.lastTrackId = trackId
+                        self.pollsSinceTrackChange = 0 // Reset poll counter for new track
 
-                        // Get album art URL
+                        // Get album art URL - wait for Last.fm before using empty/fallback
                         var albumArtUrl = ""
                         if let albumArt = nowPlaying["albumArt"] as? String {
                             albumArtUrl = albumArt
@@ -903,6 +905,12 @@ public class NativeAudioPlayer: CAPPlugin, CAPBridgedPlugin {
                             albumArtUrl = lastfmUrls["large_image"] as? String ??
                                          lastfmUrls["med_image"] as? String ??
                                          lastfmUrls["sm_image"] as? String ?? ""
+                        }
+
+                        // If no album art yet and we haven't waited 30 seconds, pass empty string
+                        // This prevents showing fallback before Last.fm has a chance to populate
+                        if albumArtUrl.isEmpty && self.pollsSinceTrackChange < 6 {
+                            print("⏳ [POLL] No album art yet (poll \(self.pollsSinceTrackChange)/6) - waiting for Last.fm")
                         }
 
                         print("🖼️ [POLL] Album art URL: \(albumArtUrl.isEmpty ? "NONE" : albumArtUrl)")
@@ -940,7 +948,48 @@ public class NativeAudioPlayer: CAPPlugin, CAPBridgedPlugin {
                             print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                         }
                     } else {
-                        print("ℹ️ [POLL] No track change - same track playing")
+                        self.pollsSinceTrackChange += 1
+                        print("ℹ️ [POLL] No track change - same track playing (poll \(self.pollsSinceTrackChange))")
+
+                        // Check if Last.fm album art became available
+                        var albumArtUrl = ""
+                        if let albumArt = nowPlaying["albumArt"] as? String {
+                            albumArtUrl = albumArt
+                        } else if let lastfmUrls = nowPlaying["lastfm_urls"] as? [String: Any] {
+                            albumArtUrl = lastfmUrls["large_image"] as? String ??
+                                         lastfmUrls["med_image"] as? String ??
+                                         lastfmUrls["sm_image"] as? String ?? ""
+                        }
+
+                        // Update if album art became available
+                        if !albumArtUrl.isEmpty {
+                            print("🎨 [POLL] Album art became available - updating lock screen")
+                            DispatchQueue.main.async {
+                                if let artist = nowPlaying["artist"] as? String,
+                                   let track = nowPlaying["track"] as? String {
+                                    let album = nowPlaying["album"] as? String ??
+                                               nowPlaying["release"] as? String ?? ""
+
+                                    self.updateLockScreenMetadata(
+                                        title: track,
+                                        artist: artist,
+                                        album: album,
+                                        albumArtUrl: albumArtUrl
+                                    )
+
+                                    // Notify JavaScript layer
+                                    let eventData: [String: Any] = [
+                                        "artist": artist,
+                                        "track": track,
+                                        "album": album,
+                                        "albumArt": albumArtUrl
+                                    ]
+                                    self.notifyListeners("trackChanged", data: eventData)
+                                    print("✅ [NOTIFY JS] Album art update sent to JavaScript")
+                                }
+                            }
+                        }
+
                         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                     }
                 } else {

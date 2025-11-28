@@ -103,7 +103,12 @@ const ListenPage: React.FC = () => {
           endTime,
           djName: track.djName,
           showName: track.showName,
-          djProfileUrl: '#',
+          djProfileUrl: track.djName
+            ? `/djs/${track.djName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')}`
+            : '#',
         },
       }
     })
