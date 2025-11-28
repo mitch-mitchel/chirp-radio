@@ -7,14 +7,15 @@ import { useNotification } from '../contexts/NotificationContext'
 import { useAuth } from '../hooks/useAuth'
 import { addToCollection, removeFromCollection, isInCollection } from '../utils/collectionDB'
 import LoginRequiredModal from '../stories/CrLoginRequiredModal'
-import { useMobilePageByIdentifier, useTracks, useSiteSettings } from '../hooks/useData'
+import { useMobilePageByIdentifier, useSiteSettings } from '../hooks/useData'
+import { useTracksPlayed } from '../hooks/useTracksPlayed'
 
 export default function RecentlyPlayed() {
   const { showToast } = useNotification()
   const { isLoggedIn, login, signup } = useAuth()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const { data: pageContent } = useMobilePageByIdentifier('recently-played')
-  const { data: tracks } = useTracks()
+  const { data: tracks } = useTracksPlayed({ limit: 200, page: 1 })
   const { data: siteSettings } = useSiteSettings()
 
   // Get page header content from CMS with fallbacks
@@ -38,30 +39,51 @@ export default function RecentlyPlayed() {
 
   // Format tracks with hour data for display (take only the 2 most recent hours)
   const playlistItems = useMemo(() => {
-    if (!tracks) return []
+    if (!tracks || tracks.length === 0) return []
 
-    // Get unique hours in order (most recent first)
-    const uniqueHours: string[] = []
-    const tracksSorted = [...tracks].sort(
-      (a, b) => new Date(b.playedAt || 0).getTime() - new Date(a.playedAt || 0).getTime()
+    // Add hourKey to each track based on playedAt timestamp (in Chicago timezone)
+    const tracksWithHourKey = tracks.map((track) => {
+      const playedDate = new Date(track.playedAt)
+      // Get hour in Chicago timezone
+      const chicagoTime = playedDate.toLocaleString('en-US', {
+        timeZone: 'America/Chicago',
+        hour: 'numeric',
+        hour12: false,
+      })
+      const hour = parseInt(chicagoTime.split(',')[1]?.trim() || chicagoTime)
+      const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+      const period = hour < 12 ? 'am' : 'pm'
+      const hourKey = `${hour12}${period}`
+      return { ...track, hourKey }
+    })
+
+    // First, find the most recent 2 unique hours by sorting tracks by time
+    const tracksSortedByTime = [...tracksWithHourKey].sort(
+      (a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime()
     )
 
-    tracksSorted.forEach((track) => {
+    // Get unique hours from sorted tracks (most recent hours first)
+    const uniqueHours: string[] = []
+    tracksSortedByTime.forEach((track) => {
       if (!uniqueHours.includes(track.hourKey)) {
         uniqueHours.push(track.hourKey)
       }
     })
 
-    // Get tracks for the 2 most recent hours
+    // Get only the first 2 unique hours (most recent)
     const recentHours = uniqueHours.slice(0, 2)
-    const recentTracks = tracks.filter((track) => recentHours.includes(track.hourKey))
+
+    // Filter tracks from those 2 hours, then sort NEWEST to OLDEST (reverse chronological)
+    const recentTracks = tracksWithHourKey
+      .filter((track) => recentHours.includes(track.hourKey))
+      .sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
 
     return recentTracks.map((track) => {
-      const playedDate = new Date(track.playedAt || 0)
+      const playedDate = new Date(track.playedAt)
       const timeString = playedDate.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
-        hour12: true,
+        timeZone: 'America/Chicago',
       })
 
       // Parse the hourKey to determine start/end times
