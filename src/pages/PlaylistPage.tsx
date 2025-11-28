@@ -88,7 +88,12 @@ const PlaylistPage: React.FC = () => {
           startTime,
           endTime,
           djName: track.djName || 'Unknown DJ',
-          djProfileUrl: undefined,
+          djProfileUrl: track.djName
+            ? `/djs/${track.djName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')}`
+            : '#',
           showName: track.showName || 'Unknown Show',
         },
       }

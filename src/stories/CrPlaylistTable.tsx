@@ -109,6 +109,57 @@ export default function CrPlaylistTable({
     }))
   }
 
+  // Helper to check if a time range contains current time (Chicago timezone)
+  const isCurrentHour = (startTime: string, endTime: string): boolean => {
+    try {
+      // Get current time in Chicago timezone
+      const now = new Date()
+      const chicagoTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }))
+      const currentHour = chicagoTime.getHours()
+      const _currentMinute = chicagoTime.getMinutes()
+
+      // Parse start time (e.g., "12:00pm" or "1:00am")
+      const startMatch = startTime.match(/(\d+):(\d+)(am|pm)/i)
+      if (!startMatch) return false
+
+      let startHour = parseInt(startMatch[1])
+      const startPeriod = startMatch[3].toLowerCase()
+
+      // Convert to 24-hour format
+      if (startPeriod === 'pm' && startHour !== 12) {
+        startHour += 12
+      } else if (startPeriod === 'am' && startHour === 12) {
+        startHour = 0
+      }
+
+      // Parse end time
+      const endMatch = endTime.match(/(\d+):(\d+)(am|pm)/i)
+      if (!endMatch) return false
+
+      let endHour = parseInt(endMatch[1])
+      const endPeriod = endMatch[3].toLowerCase()
+
+      // Convert to 24-hour format
+      if (endPeriod === 'pm' && endHour !== 12) {
+        endHour += 12
+      } else if (endPeriod === 'am' && endHour === 12) {
+        endHour = 0
+      }
+
+      // Check if current time is within the hour range
+      // Handle cases where end hour wraps to next day (e.g., 11pm - 12am)
+      if (endHour < startHour) {
+        // Wraps to next day
+        return currentHour >= startHour || currentHour < endHour
+      } else {
+        return currentHour >= startHour && currentHour < endHour
+      }
+    } catch (error) {
+      console.error('Error checking current hour:', error)
+      return false
+    }
+  }
+
   // Group items by hour if groupByHour is true, preserving order
   const groupedItems = groupByHour
     ? (() => {
@@ -169,6 +220,7 @@ export default function CrPlaylistTable({
                     djName={hourData.djName}
                     djProfileUrl={hourData.djProfileUrl}
                     showName={hourData.showName}
+                    isOnAir={isCurrentHour(hourData.startTime, hourData.endTime)}
                     isCollapsed={isCollapsed}
                   />
                 </div>
