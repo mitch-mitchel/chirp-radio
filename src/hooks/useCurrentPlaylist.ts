@@ -155,6 +155,7 @@ export function useCurrentPlaylist(): UseCurrentPlaylistReturn {
         const timeAgo = playedAt.toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
+          timeZone: 'America/Chicago',
         })
 
         return {

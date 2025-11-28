@@ -26,10 +26,16 @@ const ListenPage: React.FC = () => {
   const recentlyPlayedTracks = React.useMemo(() => {
     if (!tracks || tracks.length === 0) return []
 
-    // Add hourKey to each track based on playedAt timestamp
+    // Add hourKey to each track based on playedAt timestamp (in Chicago timezone)
     const tracksWithHourKey = tracks.map((track) => {
       const playedDate = new Date(track.playedAt)
-      const hour = playedDate.getHours()
+      // Get hour in Chicago timezone
+      const chicagoTime = playedDate.toLocaleString('en-US', {
+        timeZone: 'America/Chicago',
+        hour: 'numeric',
+        hour12: false,
+      })
+      const hour = parseInt(chicagoTime.split(',')[1]?.trim() || chicagoTime)
       const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
       const period = hour < 12 ? 'am' : 'pm'
       const hourKey = `${hour12}${period}`
@@ -89,6 +95,7 @@ const ListenPage: React.FC = () => {
         timeAgo: new Date(track.playedAt).toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
+          timeZone: 'America/Chicago',
         }),
         hourKey: track.hourKey,
         hourData: {
