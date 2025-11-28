@@ -13,7 +13,6 @@ class CarPlayBridge: UIResponder, CPTemplateApplicationSceneDelegate {
 
     weak var interfaceController: CPInterfaceController?
     private var nowPlayingTemplate: CPNowPlayingTemplate?
-    private var tabBarTemplate: CPTabBarTemplate?
 
     // Shared singleton for direct access from NativeAudioPlayer
     static var shared: CarPlayBridge?
@@ -38,14 +37,9 @@ class CarPlayBridge: UIResponder, CPTemplateApplicationSceneDelegate {
 
         configureLiveStreamNowPlaying()
 
-        // Create tab bar template - REMOVE the extra tab, just use nowPlayingTemplate
-        print("🚗 Creating tab bar template with Now Playing...")
-        tabBarTemplate = CPTabBarTemplate(templates: [nowPlayingTemplate!])
-        print("🚗 ✅ Tab bar template created")
-
-        // Set tab bar as root template
-        print("🚗 Setting root template...")
-        interfaceController.setRootTemplate(tabBarTemplate!, animated: false) { success, error in
+        // For live radio, skip tab bar and go directly to Now Playing screen
+        print("🚗 Setting Now Playing template as root (skip tab bar for live stream)...")
+        interfaceController.setRootTemplate(nowPlayingTemplate!, animated: false) { success, error in
             if let error = error {
                 print("🚗 ❌ Error setting root template: \(error)")
             } else {
