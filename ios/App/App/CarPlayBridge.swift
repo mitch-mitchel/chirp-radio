@@ -13,7 +13,6 @@ class CarPlayBridge: UIResponder, CPTemplateApplicationSceneDelegate {
 
     weak var interfaceController: CPInterfaceController?
     private var nowPlayingTemplate: CPNowPlayingTemplate?
-    private var tabBarTemplate: CPTabBarTemplate?
 
     // Shared singleton for direct access from NativeAudioPlayer
     static var shared: CarPlayBridge?
