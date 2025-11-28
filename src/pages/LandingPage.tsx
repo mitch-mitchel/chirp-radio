@@ -22,7 +22,7 @@ import {
   useShowSchedules,
 } from '../hooks/useData'
 import { useNowPlaying } from '../contexts/NowPlayingContext'
-import { useCurrentPlaylist } from '../hooks/useCurrentPlaylist'
+import { useRecentTracksPlayed } from '../hooks/useTracksPlayed'
 import {
   getEventImageUrl,
   getEventCategoryName,
@@ -52,7 +52,19 @@ const LandingPage: React.FC = () => {
   const { data: members, loading: membersLoading } = useMembers()
   const { data: showSchedules } = useShowSchedules()
   const { currentData: nowPlayingData } = useNowPlaying()
-  const { tracks: playlistTracks } = useCurrentPlaylist()
+  const { data: recentTracks } = useRecentTracksPlayed(6)
+
+  // Transform tracks to add timeAgo field
+  const playlistTracks = useMemo(() => {
+    return recentTracks.map((track) => ({
+      ...track,
+      timeAgo: new Date(track.playedAt).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: 'America/Chicago',
+      }),
+    }))
+  }, [recentTracks])
 
   // Smart DJ check trigger - only updates at strategic times when DJ might change
   const [djCheckTrigger, setDjCheckTrigger] = useState(Date.now())
