@@ -465,11 +465,6 @@ const LandingPage: React.FC = () => {
                 djSlug,
               })
 
-              // Only render if we have a DJ image to prevent showing placeholder
-              if (!djImage) {
-                return null
-              }
-
               return (
                 <CrCurrentDjCard
                   djName={nowPlayingData.dj || currentShow.djName}
