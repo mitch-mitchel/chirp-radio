@@ -3,7 +3,20 @@ import CrCurrentDj from './CrCurrentDj'
 import CrButton from './CrButton'
 import CrChip from './CrChip'
 import { PiMusicNote, PiHeart, PiHeartFill, PiArrowRight } from 'react-icons/pi'
+import { getRandomFallback } from '../utils/albumArtFallback'
 import './CrCurrentDjCard.css'
+
+// Generate fallback images array (album-art-2 through album-art-7)
+const FALLBACK_IMAGES = Array.from({ length: 6 }, (_, i) => {
+  const num = i + 2 // Start at 2, end at 7
+  return `${import.meta.env.VITE_CMS_API_URL}/player-fallback-images/file/album-art-${num}-600x600.png`
+})
+
+// Get a random fallback image for default prop
+const getDefaultFallback = () => {
+  const { url } = getRandomFallback(FALLBACK_IMAGES)
+  return url
+}
 
 interface CrCurrentDjCardProps {
   djImage?: string
@@ -27,7 +40,7 @@ interface CrCurrentDjCardProps {
 
 export default function CrCurrentDjCard({
   // Image
-  djImage = `${import.meta.env.VITE_CMS_API_URL}/player-fallback-images/file/album-art-2-600x600.png`,
+  djImage = getDefaultFallback(),
   djImageAlt = 'DJ Current',
 
   // CrCurrentDj props
