@@ -7,9 +7,10 @@ import { getRandomFallback } from '../utils/albumArtFallback'
 import './CrCurrentDjCard.css'
 
 // Generate fallback images array (album-art-2 through album-art-7)
+// Using original images since 600x600 resized versions aren't generated yet
 const FALLBACK_IMAGES = Array.from({ length: 6 }, (_, i) => {
   const num = i + 2 // Start at 2, end at 7
-  return `${import.meta.env.VITE_CMS_API_URL}/player-fallback-images/file/album-art-${num}-600x600.png`
+  return `${import.meta.env.VITE_CMS_API_URL}/player-fallback-images/file/album-art-${num}.png`
 })
 
 // Get a random fallback image for default prop
@@ -41,7 +42,7 @@ interface CrCurrentDjCardProps {
 export default function CrCurrentDjCard({
   // Image
   djImage = getDefaultFallback(),
-  djImageAlt = 'DJ Current',
+  djImageAlt,
 
   // CrCurrentDj props
   djName = 'DJ Current',
@@ -65,6 +66,9 @@ export default function CrCurrentDjCard({
   showFavoriteButton = true,
   showMoreButton = true,
 }: CrCurrentDjCardProps) {
+  // Use DJ name for alt text if not provided
+  const altText = djImageAlt || `${djName} profile picture`
+
   return (
     <div className={`cr-current-dj-card ${className}`}>
       <div className="cr-current-dj-card__top">
@@ -73,7 +77,7 @@ export default function CrCurrentDjCard({
 
       <div className="cr-current-dj-card__content">
         <div className="cr-current-dj-card__image-container">
-          <img src={djImage} alt={djImageAlt} className="cr-current-dj-card__image" />
+          <img src={djImage} alt={altText} className="cr-current-dj-card__image" />
           {isFavorite && (
             <div className="cr-current-dj-card__favorite-badge">
               <CrChip variant="secondary-light" size="small" squared>
