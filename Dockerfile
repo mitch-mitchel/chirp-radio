@@ -19,13 +19,18 @@ COPY . .
 # Build arguments for environment variables
 ARG VITE_USE_CMS_API=true
 ARG VITE_CMS_API_URL=""
+ARG NODE_ENV=production
 
 # Set environment variables for build
 ENV VITE_USE_CMS_API=$VITE_USE_CMS_API
 ENV VITE_CMS_API_URL=$VITE_CMS_API_URL
+ENV NODE_ENV=$NODE_ENV
 
 # Build the application
 RUN npm run build
+
+# Build Storybook
+RUN npm run build-storybook
 
 # Stage 2: Production server
 FROM nginx:alpine
@@ -35,6 +40,9 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy Storybook build to /storybook path
+COPY --from=builder /app/storybook-static /usr/share/nginx/html/storybook
 
 # Expose port 80
 EXPOSE 80
