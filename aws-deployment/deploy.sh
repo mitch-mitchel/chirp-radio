@@ -118,7 +118,8 @@ fi
 
 # Step 5: Register Task Definition
 echo -e "\n${YELLOW}Step 5: Registering ECS task definition...${NC}"
-cat > task-definition.json << EOF
+# cat > task-definition.json << EOF
+cat << EOF > task-definition.json
 {
   "family": "$TASK_FAMILY",
   "networkMode": "awsvpc",
@@ -162,12 +163,18 @@ cat > task-definition.json << EOF
   ]
 }
 EOF
+echo -e "${GREEN}✓ Task definition file created${NC}"
 
 aws ecs register-task-definition \
     --cli-input-json file://task-definition.json \
     --region $AWS_REGION
 
-echo -e "${GREEN}✓ Task definition registered${NC}"
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Task definition registered${NC}"
+else
+    echo -e "${RED}✗ Failed to register task definition${NC}"
+    exit 1
+fi
 
 # Step 6: Create Application Load Balancer (if configured)
 if [ "$CREATE_ALB" = "true" ]; then
