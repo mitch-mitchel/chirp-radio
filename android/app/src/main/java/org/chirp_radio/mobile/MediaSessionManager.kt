@@ -185,19 +185,40 @@ class MediaSessionManager(private val context: Context) {
         } else {
             PlaybackStateCompat.STATE_PAUSED
         }
-        mediaSession?.setPlaybackState(buildPlaybackState(state))
+        mediaSession?.setPlaybackState(buildPlaybackState(state, null))
     }
 
-    private fun buildPlaybackState(state: Int): PlaybackStateCompat {
+    fun setBufferingState() {
+        android.util.Log.d("MediaSessionManager", "📶 Stream buffering...")
+        mediaSession?.setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_BUFFERING, null))
+    }
+
+    fun setErrorState(errorMessage: String) {
+        android.util.Log.e("MediaSessionManager", "❌ Stream error: $errorMessage")
+        val state = PlaybackStateCompat.Builder()
+            .setState(PlaybackStateCompat.STATE_ERROR, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1.0f)
+            .setErrorMessage(PlaybackStateCompat.ERROR_CODE_APP_ERROR, errorMessage)
+            .setActions(PlaybackStateCompat.ACTION_PLAY) // Allow retry
+            .build()
+        mediaSession?.setPlaybackState(state)
+    }
+
+    private fun buildPlaybackState(state: Int, errorMessage: String?): PlaybackStateCompat {
         val actions = PlaybackStateCompat.ACTION_PLAY_PAUSE or
                 PlaybackStateCompat.ACTION_PLAY or
                 PlaybackStateCompat.ACTION_PAUSE or
                 PlaybackStateCompat.ACTION_STOP
 
-        return PlaybackStateCompat.Builder()
+        val builder = PlaybackStateCompat.Builder()
             .setState(state, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1.0f)
             .setActions(actions)
-            .build()
+
+        // Add error message if present
+        errorMessage?.let {
+            builder.setErrorMessage(PlaybackStateCompat.ERROR_CODE_APP_ERROR, it)
+        }
+
+        return builder.build()
     }
 
     private suspend fun loadAlbumArt(urlString: String): Bitmap? = withContext(Dispatchers.IO) {
