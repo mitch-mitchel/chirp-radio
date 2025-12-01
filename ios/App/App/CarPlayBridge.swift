@@ -8,6 +8,7 @@
 import CarPlay
 import MediaPlayer
 import UIKit
+import AVFoundation
 
 class CarPlayBridge: UIResponder, CPTemplateApplicationSceneDelegate {
 
@@ -29,6 +30,12 @@ class CarPlayBridge: UIResponder, CPTemplateApplicationSceneDelegate {
 
         self.interfaceController = interfaceController
         CarPlayBridge.shared = self
+
+        // Activate audio session for CarPlay
+        activateAudioSession()
+
+        // Set initial metadata so CarPlay doesn't show "failure to connect"
+        setInitialMetadata()
 
         // Create Now Playing template
         print("🚗 Creating CPNowPlayingTemplate.shared...")
@@ -64,6 +71,19 @@ class CarPlayBridge: UIResponder, CPTemplateApplicationSceneDelegate {
         }
     }
 
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("🚗 CarPlay scene will enter foreground")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+        // Ensure Now Playing template is showing when returning to app
+        if let interfaceController = interfaceController,
+           let nowPlayingTemplate = nowPlayingTemplate {
+            interfaceController.setRootTemplate(nowPlayingTemplate, animated: false)
+            print("🚗 ✅ Restored Now Playing template as root")
+        }
+    }
+
     func templateApplicationSceneDidDisconnect(_ templateApplicationScene: CPTemplateApplicationScene) {
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         print("🚗 CarPlay disconnected")
@@ -83,6 +103,47 @@ class CarPlayBridge: UIResponder, CPTemplateApplicationSceneDelegate {
         print("🚗 Window: \(window)")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     }
+
+    // MARK: - Audio Session
+
+    private func activateAudioSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .default, options: [])
+            try audioSession.setActive(true)
+            print("🚗 ✅ Audio session activated for CarPlay")
+        } catch {
+            print("🚗 ❌ Failed to activate audio session: \(error)")
+        }
+    }
+
+    private func setInitialMetadata() {
+        var nowPlayingInfo: [String: Any] = [
+            MPMediaItemPropertyTitle: "CHIRP Radio",
+            MPMediaItemPropertyArtist: "Live Stream",
+            MPMediaItemPropertyAlbumTitle: "Chicago Independent Radio Project",
+            MPNowPlayingInfoPropertyIsLiveStream: true
+        ]
+
+        // Try to load fallback album art
+        if let imagePath = Bundle.main.path(forResource: "public/images/album-art-fallback", ofType: "png"),
+           let image = UIImage(contentsOfFile: imagePath) {
+            let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+            print("🚗 ✅ Initial metadata set with album art")
+        } else if let image = UIImage(named: "Splash") {
+            let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+            print("🚗 ✅ Initial metadata set with Splash artwork")
+        } else {
+            print("🚗 ⚠️ Initial metadata set without artwork")
+        }
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        print("🚗 ✅ Initial Now Playing metadata configured for CarPlay")
+    }
+
+    // MARK: - Metadata Updates
 
     private var lastMetadataHash: Int = 0
 
