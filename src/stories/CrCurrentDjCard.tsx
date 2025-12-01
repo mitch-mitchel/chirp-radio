@@ -27,7 +27,7 @@ interface CrCurrentDjCardProps {
 
 export default function CrCurrentDjCard({
   // Image
-  djImage = 'http://localhost:3000/api/player-fallback-images/file/album-art-8-600x600.png',
+  djImage = `${import.meta.env.VITE_CMS_API_URL}/player-fallback-images/file/album-art-8-600x600.png`,
   djImageAlt = 'DJ Current',
 
   // CrCurrentDj props
