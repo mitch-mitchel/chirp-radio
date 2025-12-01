@@ -29,6 +29,7 @@ interface CrProfileCardProps {
   showPermissions?: boolean
   isVolunteer?: boolean
   isDJ?: boolean
+  djId?: number
   djName?: string
   showName?: string
   showTime?: string
@@ -96,6 +97,7 @@ export default function CrProfileCard({
   // User role for determining what edit options to show
   isVolunteer = false, // true if user has volunteer permissions
   isDJ = false, // true if user has DJ permissions
+  djId,
   djName,
   showName,
   showTime,
@@ -253,6 +255,13 @@ export default function CrProfileCard({
           {/* Details section */}
           <div className="cr-profile-card__profile-info">
             <div className="cr-profile-card__details">
+              {isDJ && djId && (
+                <div className="cr-profile-card__detail-item">
+                  <span className="cr-profile-card__detail-label">DJ ID:</span>
+                  <span className="cr-profile-card__detail-value">{djId}</span>
+                </div>
+              )}
+
               {isDJ && djName && (
                 <div className="cr-profile-card__detail-item">
                   <span className="cr-profile-card__detail-label">DJ Name:</span>
