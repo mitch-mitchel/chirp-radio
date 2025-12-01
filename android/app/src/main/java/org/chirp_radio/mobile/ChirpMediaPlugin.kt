@@ -65,6 +65,30 @@ class ChirpMediaPlugin : Plugin() {
     }
 
     @PluginMethod
+    fun setBufferingState(call: PluginCall) {
+        // Ensure service is started
+        ensureServiceStarted()
+
+        // Update service to buffering state
+        ChirpMediaService.instance?.setBufferingState()
+
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun setErrorState(call: PluginCall) {
+        val errorMessage = call.getString("errorMessage") ?: "Stream connection failed"
+
+        // Ensure service is started
+        ensureServiceStarted()
+
+        // Update service to error state
+        ChirpMediaService.instance?.setErrorState(errorMessage)
+
+        call.resolve()
+    }
+
+    @PluginMethod
     fun getCurrentState(call: PluginCall) {
         val service = ChirpMediaService.instance
         val result = JSObject().apply {

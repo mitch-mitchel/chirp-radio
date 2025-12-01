@@ -183,6 +183,43 @@ class ChirpMediaService : MediaBrowserServiceCompat(), MediaSessionManager.Media
         result.sendResult(mediaItems)
     }
 
+    override fun onSearch(query: String, extras: Bundle?, result: Result<MutableList<MediaBrowserCompat.MediaItem>>) {
+        android.util.Log.d("ChirpMediaService", "🔍 Voice search query: '$query'")
+
+        val mediaItems = mutableListOf<MediaBrowserCompat.MediaItem>()
+
+        // Match various ways people might ask for CHIRP Radio
+        val lowerQuery = query.lowercase()
+        if (lowerQuery.contains("chirp") ||
+            lowerQuery.contains("107.1") ||
+            lowerQuery.contains("chicago") ||
+            lowerQuery.contains("independent radio") ||
+            lowerQuery.contains("live stream") ||
+            lowerQuery.contains("radio")) {
+
+            // Return the live stream as search result
+            val description = MediaDescriptionCompat.Builder()
+                .setMediaId(LIVE_STREAM_ID)
+                .setTitle("CHIRP Radio - Live Stream")
+                .setSubtitle("Chicago Independent Radio Project")
+                .setDescription("107.1 FM Chicago - Independent Music")
+                .build()
+
+            mediaItems.add(
+                MediaBrowserCompat.MediaItem(
+                    description,
+                    MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+                )
+            )
+
+            android.util.Log.d("ChirpMediaService", "✅ Voice search matched CHIRP Radio")
+        } else {
+            android.util.Log.d("ChirpMediaService", "❌ Voice search: no match for '$query'")
+        }
+
+        result.sendResult(mediaItems)
+    }
+
     // Public methods for plugin to call
     fun updateNowPlaying(title: String, artist: String, albumArtUrl: String?, dj: String) {
         mediaSessionManager.updateNowPlaying(title, artist, albumArtUrl, dj)
@@ -198,6 +235,20 @@ class ChirpMediaService : MediaBrowserServiceCompat(), MediaSessionManager.Media
         if (isForeground) {
             showNotification()
         } else if (isPlaying) {
+            showNotification()
+        }
+    }
+
+    fun setBufferingState() {
+        mediaSessionManager.setBufferingState()
+        if (isForeground) {
+            showNotification()
+        }
+    }
+
+    fun setErrorState(errorMessage: String) {
+        mediaSessionManager.setErrorState(errorMessage)
+        if (isForeground) {
             showNotification()
         }
     }
