@@ -37,7 +37,7 @@
 }
 
 /* Subtle scroll indicator on the right - only show when not at end */
-.cr-recently-played__scroll-wrapper--gradient::after {
+.cr-recently-played__scroll-wrapper::after {
   content: '';
   position: absolute;
   top: 0;
@@ -47,13 +47,43 @@
   background: linear-gradient(to left, rgba(0, 0, 0, 0.5), transparent);
   pointer-events: none;
   z-index: 10;
+  opacity: 0;
   transition: opacity 0.3s ease;
   filter: blur(10px);
+}
+
+.cr-recently-played__scroll-wrapper--gradient::after {
+  opacity: 1;
 }
 
 /* Dark theme adjustment */
 [data-theme='dark'] .cr-recently-played__scroll-wrapper--gradient::after {
   background: linear-gradient(to left, rgba(255, 255, 255, 0.08), transparent);
+}
+
+/* Subtle scroll indicator on the left - only show when scrolled past start */
+.cr-recently-played__scroll-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 60px;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent);
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  filter: blur(10px);
+}
+
+.cr-recently-played__scroll-wrapper--gradient-left::before {
+  opacity: 1;
+}
+
+/* Dark theme adjustment */
+[data-theme='dark'] .cr-recently-played__scroll-wrapper--gradient-left::before {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.08), transparent);
 }
 
 .cr-recently-played__scroll-container {
@@ -89,9 +119,39 @@
   gap: var(--cr-space-4);
 }
 
+/* Add padding to the right of last card */
+.cr-recently-played__track-list::after {
+  content: '';
+  flex: 0 0 var(--cr-space-2);
+}
+
 .cr-recently-played__track-list .cr-playlist-item--card {
   flex: 0 0 auto;
   min-width: 220px;
+
+  /* Horizontal scroll-reveal animation - covers full journey */
+  animation: card-reveal-inline linear both;
+  animation-timeline: view(inline);
+  animation-range: cover 0% cover 100%;
+}
+
+@keyframes card-reveal-inline {
+  0% {
+    opacity: 0.3;
+    scale: 0.95;
+  }
+  20% {
+    opacity: 1;
+    scale: 1;
+  }
+  80% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0.3;
+    scale: 0.95;
+  }
 }
 
 /* When screen is wide enough for all 6 cards, justify space-between */
