@@ -106,6 +106,7 @@ export interface User {
   // ==========================================
   // DJ FIELDS (Regular DJ & Substitute DJ)
   // ==========================================
+  djId?: number
   djName?: string
   showName?: string
   showTime?: string
