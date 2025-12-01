@@ -98,7 +98,7 @@ class MediaSessionManager(private val context: Context) {
             setMetadata(initialMetadata)
 
             // Set initial playback state
-            setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PAUSED))
+            setPlaybackState(buildPlaybackState(PlaybackStateCompat.STATE_PAUSED, null))
 
             // Activate session
             isActive = true
