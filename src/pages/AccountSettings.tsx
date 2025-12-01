@@ -982,6 +982,7 @@ export default function AccountSettings() {
               showPermissions={isVolunteer(user)}
               isVolunteer={isVolunteer(user) || isDJ(user)}
               isDJ={isDJ(user)}
+              djId={user?.djId}
               djName={user?.djName}
               showName={user?.showName}
               showTime={formatShowTime(user?.showTime)}
