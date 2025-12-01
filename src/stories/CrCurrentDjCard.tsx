@@ -1,23 +1,12 @@
 // CrCurrentDjCard.tsx
+import { useMemo } from 'react'
 import CrCurrentDj from './CrCurrentDj'
 import CrButton from './CrButton'
 import CrChip from './CrChip'
 import { PiMusicNote, PiHeart, PiHeartFill, PiArrowRight } from 'react-icons/pi'
 import { getRandomFallback } from '../utils/albumArtFallback'
+import { usePlayerFallbackImages } from '../hooks/useData'
 import './CrCurrentDjCard.css'
-
-// Generate fallback images array (album-art-2 through album-art-7)
-// Using original images since 600x600 resized versions aren't generated yet
-const FALLBACK_IMAGES = Array.from({ length: 6 }, (_, i) => {
-  const num = i + 2 // Start at 2, end at 7
-  return `${import.meta.env.VITE_CMS_API_URL}/player-fallback-images/file/album-art-${num}.png`
-})
-
-// Get a random fallback image for default prop
-const getDefaultFallback = () => {
-  const { url } = getRandomFallback(FALLBACK_IMAGES)
-  return url
-}
 
 interface CrCurrentDjCardProps {
   djImage?: string
@@ -41,7 +30,7 @@ interface CrCurrentDjCardProps {
 
 export default function CrCurrentDjCard({
   // Image
-  djImage = getDefaultFallback(),
+  djImage,
   djImageAlt,
 
   // CrCurrentDj props
@@ -66,6 +55,26 @@ export default function CrCurrentDjCard({
   showFavoriteButton = true,
   showMoreButton = true,
 }: CrCurrentDjCardProps) {
+  // Get fallback images from CMS
+  const { data: fallbackImages = [] } = usePlayerFallbackImages()
+
+  // Get a random fallback if no djImage provided
+  const finalDjImage = useMemo(() => {
+    if (djImage) return djImage
+
+    if (fallbackImages.length > 0) {
+      const imageUrls = fallbackImages.map((img) => {
+        // Use player size (600x600) if available, otherwise use original
+        return img.sizes?.player?.url || img.url
+      })
+      const { url } = getRandomFallback(imageUrls)
+      return url
+    }
+
+    // Absolute fallback
+    return '/images/album-art-fallback.png'
+  }, [djImage, fallbackImages])
+
   // Use DJ name for alt text if not provided
   const altText = djImageAlt || `${djName} profile picture`
 
@@ -77,7 +86,7 @@ export default function CrCurrentDjCard({
 
       <div className="cr-current-dj-card__content">
         <div className="cr-current-dj-card__image-container">
-          <img src={djImage} alt={altText} className="cr-current-dj-card__image" />
+          <img src={finalDjImage} alt={altText} className="cr-current-dj-card__image" />
           {isFavorite && (
             <div className="cr-current-dj-card__favorite-badge">
               <CrChip variant="secondary-light" size="small" squared>
