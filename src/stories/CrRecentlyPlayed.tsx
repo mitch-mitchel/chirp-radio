@@ -51,6 +51,7 @@ export default function CrRecentlyPlayed({
 }: CrRecentlyPlayedProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showGradient, setShowGradient] = useState(true)
+  const [showGradientLeft, setShowGradientLeft] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   // DJ info from props
@@ -83,7 +84,9 @@ export default function CrRecentlyPlayed({
       // Only show gradient if content is wider than container AND not scrolled to the end
       const hasOverflow = scrollWidth > clientWidth
       const isNearEnd = scrollLeft + clientWidth >= scrollWidth - 50
+      const isNearStart = scrollLeft <= 10
       setShowGradient(hasOverflow && !isNearEnd)
+      setShowGradientLeft(hasOverflow && !isNearStart)
     }
 
     // Initial check
@@ -131,7 +134,7 @@ export default function CrRecentlyPlayed({
         />
 
         <div
-          className={`cr-recently-played__scroll-wrapper ${showGradient ? 'cr-recently-played__scroll-wrapper--gradient' : ''}`}
+          className={`cr-recently-played__scroll-wrapper ${showGradient ? 'cr-recently-played__scroll-wrapper--gradient' : ''} ${showGradientLeft ? 'cr-recently-played__scroll-wrapper--gradient-left' : ''}`}
         >
           <div className="cr-recently-played__scroll-container" ref={scrollRef}>
             <div className="cr-recently-played__track-list">
