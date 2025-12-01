@@ -4,6 +4,7 @@
 
 - **Android Auto** - Code complete, tested in emulator, needs physical device testing (see PLATFORM_INTEGRATION.md)
 - **iOS Production CMS** - Needs CMS deployed, then update `VITE_CMS_API_URL` in `.env.production`
+  - Note: iOS Recently Played currently shows old cached mock data - will resolve once production CMS is available and cache expires/clears
 
 ## Before Beta Work
 
@@ -28,9 +29,13 @@
 
 ### Backend
 
+- **DJ ID Setup** - Add DJ IDs from NextUp to each DJ record in CMS, then sync DJ recordings from archive API (https://us-central1-chirpradio-hrd.cloudfunctions.net/archive-player/wcxp-lp/sun/4p)
+- **Playlist Poller Hosting** - Deploy run-playlist-poller.ts to run 24/7 on production server (currently runs in Docker locally)
+- **Song Request Email Service** - Set up backend endpoint + email integration for song request submissions from MakeRequest.tsx
 - **Data Migration** - Pull in existing data and test - mobile and web exports
 - **Collection Sync** - Combine users collections from mobile and web
 - **Better Impact Import** - Import Better Impact and merge with listener accounts ONCE before launch
+- **Add nextUp DJ IDs to DJ profiles** - Link show schedules to DJ profiles using oldId mapping
 
 ### General
 
