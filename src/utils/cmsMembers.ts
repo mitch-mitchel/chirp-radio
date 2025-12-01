@@ -1,14 +1,16 @@
 // CMS API utility functions for fetching members/listeners data
 import type { User, DonationHistory, PurchaseHistory } from '../types/user'
 
-const CMS_API_URL = import.meta.env.VITE_CMS_API_URL || 'http://localhost:3000/api'
+const CMS_API_URL = import.meta.env.VITE_CMS_API_URL || '/api'
 
 /**
  * Fetch donations for a member
  */
 async function fetchDonationsForMember(memberId: string): Promise<DonationHistory[]> {
   try {
-    const response = await fetch(`${CMS_API_URL}/donations?where[member][equals]=${memberId}&limit=1000`)
+    const response = await fetch(
+      `${CMS_API_URL}/donations?where[member][equals]=${memberId}&limit=1000`
+    )
     if (!response.ok) {
       console.error(`[cmsMembers] Failed to fetch donations for member ${memberId}`)
       return []
@@ -34,7 +36,9 @@ async function fetchDonationsForMember(memberId: string): Promise<DonationHistor
  */
 async function fetchPurchasesForMember(memberId: string): Promise<PurchaseHistory[]> {
   try {
-    const response = await fetch(`${CMS_API_URL}/purchases?where[member][equals]=${memberId}&limit=1000`)
+    const response = await fetch(
+      `${CMS_API_URL}/purchases?where[member][equals]=${memberId}&limit=1000`
+    )
     if (!response.ok) {
       console.error(`[cmsMembers] Failed to fetch purchases for member ${memberId}`)
       return []
@@ -44,11 +48,12 @@ async function fetchPurchasesForMember(memberId: string): Promise<PurchaseHistor
     // Transform CMS purchases to frontend format
     return (data.docs || []).map((purchase: any) => {
       // Create item summary from items array
-      const itemSummary = purchase.items && purchase.items.length > 0
-        ? purchase.items.length === 1
-          ? purchase.items[0].productName
-          : `${purchase.items[0].productName} +${purchase.items.length - 1} more`
-        : 'Unknown Item'
+      const itemSummary =
+        purchase.items && purchase.items.length > 0
+          ? purchase.items.length === 1
+            ? purchase.items[0].productName
+            : `${purchase.items[0].productName} +${purchase.items.length - 1} more`
+          : 'Unknown Item'
 
       return {
         id: purchase.id,
@@ -109,9 +114,7 @@ export async function fetchAllMembers(): Promise<User[]> {
  */
 export async function fetchDJs(): Promise<User[]> {
   try {
-    const response = await fetch(
-      `${CMS_API_URL}/listeners?where[roles][contains]=Regular DJ`
-    )
+    const response = await fetch(`${CMS_API_URL}/listeners?where[roles][contains]=Regular DJ`)
     if (!response.ok) {
       throw new Error(`Failed to fetch DJs: ${response.statusText}`)
     }
@@ -128,9 +131,7 @@ export async function fetchDJs(): Promise<User[]> {
  */
 export async function fetchSubstituteDJs(): Promise<User[]> {
   try {
-    const response = await fetch(
-      `${CMS_API_URL}/listeners?where[roles][contains]=Substitute DJ`
-    )
+    const response = await fetch(`${CMS_API_URL}/listeners?where[roles][contains]=Substitute DJ`)
     if (!response.ok) {
       throw new Error(`Failed to fetch substitute DJs: ${response.statusText}`)
     }
@@ -147,9 +148,7 @@ export async function fetchSubstituteDJs(): Promise<User[]> {
  */
 export async function fetchBoardMembers(): Promise<User[]> {
   try {
-    const response = await fetch(
-      `${CMS_API_URL}/listeners?where[roles][contains]=Board Member`
-    )
+    const response = await fetch(`${CMS_API_URL}/listeners?where[roles][contains]=Board Member`)
     if (!response.ok) {
       throw new Error(`Failed to fetch board members: ${response.statusText}`)
     }
@@ -166,9 +165,7 @@ export async function fetchBoardMembers(): Promise<User[]> {
  */
 export async function fetchVolunteers(): Promise<User[]> {
   try {
-    const response = await fetch(
-      `${CMS_API_URL}/listeners?where[roles][contains]=Volunteer`
-    )
+    const response = await fetch(`${CMS_API_URL}/listeners?where[roles][contains]=Volunteer`)
     if (!response.ok) {
       throw new Error(`Failed to fetch volunteers: ${response.statusText}`)
     }

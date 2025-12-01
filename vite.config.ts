@@ -34,6 +34,20 @@ export default defineConfig({
   ],
   server: {
     proxy: {
+      // Production API endpoint for streaming player
+      '/api/current_playlist': {
+        target: 'https://chirpradio.appspot.com',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            proxyRes.headers['cache-control'] = 'no-cache, no-store, must-revalidate'
+            proxyRes.headers['pragma'] = 'no-cache'
+            proxyRes.headers['expires'] = '0'
+          })
+        },
+      },
+      // All other API requests - proxy to local CMS
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,

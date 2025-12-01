@@ -3,7 +3,7 @@
 import type { TrackPlayed, TracksPlayedResponse } from '../types/tracksPlayed'
 import { setCached, getCached } from './cmsCache'
 
-const CMS_BASE_URL = import.meta.env.VITE_CMS_API_URL || 'http://localhost:3000/api'
+const CMS_BASE_URL = import.meta.env.VITE_CMS_API_URL || '/api'
 const TRACKS_CACHE_KEY = 'tracks-played-cache'
 const TRACKS_TIMESTAMP_KEY = 'tracks-played-timestamp'
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
