@@ -727,7 +727,7 @@ export function CMSProvider({ children }: CMSProviderProps) {
     setError((prev) => ({ ...prev, siteSettings: null }))
 
     try {
-      const apiUrl = import.meta.env.VITE_CMS_API_URL || 'http://localhost:3000/api'
+      const apiUrl = import.meta.env.VITE_CMS_API_URL || '/api'
       const response = await fetch(`${apiUrl}/globals/siteSettings?depth=2`)
 
       if (!response.ok) {
@@ -915,7 +915,7 @@ export function CMSProvider({ children }: CMSProviderProps) {
     setError((prev) => ({ ...prev, mobileAppSettings: null }))
 
     try {
-      const apiUrl = import.meta.env.VITE_CMS_API_URL || 'http://localhost:3000/api'
+      const apiUrl = import.meta.env.VITE_CMS_API_URL || '/api'
       const response = await fetch(`${apiUrl}/globals/mobileAppSettings`)
 
       if (!response.ok) {
@@ -985,7 +985,7 @@ export function CMSProvider({ children }: CMSProviderProps) {
     setError((prev) => ({ ...prev, volunteerFormSettings: null }))
 
     try {
-      const apiUrl = import.meta.env.VITE_CMS_API_URL || 'http://localhost:3000/api'
+      const apiUrl = import.meta.env.VITE_CMS_API_URL || '/api'
       const response = await fetch(`${apiUrl}/globals/volunteerFormSettings`)
 
       if (!response.ok) {
