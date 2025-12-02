@@ -69,7 +69,7 @@ export default {
 
 export const Default = {
   args: {
-    djImage: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
+    djImage: '/images/app-icons/App Icon 1.png',
     djImageAlt: 'DJ Current',
     djName: 'DJ Current',
     showName: 'The Current Show',

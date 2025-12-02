@@ -1,11 +1,8 @@
 // CrCurrentDjCard.tsx
-import { useMemo } from 'react'
 import CrCurrentDj from './CrCurrentDj'
 import CrButton from './CrButton'
 import CrChip from './CrChip'
 import { PiMusicNote, PiHeart, PiHeartFill, PiArrowRight } from 'react-icons/pi'
-import { getRandomFallback } from '../utils/albumArtFallback'
-import { usePlayerFallbackImages } from '../hooks/useData'
 import './CrCurrentDjCard.css'
 
 interface CrCurrentDjCardProps {
@@ -55,25 +52,8 @@ export default function CrCurrentDjCard({
   showFavoriteButton = true,
   showMoreButton = true,
 }: CrCurrentDjCardProps) {
-  // Get fallback images from CMS
-  const { data: fallbackImages = [] } = usePlayerFallbackImages()
-
-  // Get a random fallback if no djImage provided
-  const finalDjImage = useMemo(() => {
-    if (djImage) return djImage
-
-    if (fallbackImages.length > 0) {
-      const imageUrls = fallbackImages.map((img) => {
-        // Use player size (600x600) if available, otherwise use original
-        return img.sizes?.player?.url || img.url
-      })
-      const { url } = getRandomFallback(imageUrls)
-      return url
-    }
-
-    // Absolute fallback
-    return '/images/album-art-fallback.png'
-  }, [djImage, fallbackImages])
+  // Use DJ image if provided, otherwise use static CHIRP bird fallback
+  const finalDjImage = djImage || '/images/app-icons/App Icon 1.png'
 
   // Use DJ name for alt text if not provided
   const altText = djImageAlt || `${djName} profile picture`
